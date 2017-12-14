@@ -1,0 +1,57 @@
+package Python_D10_2;
+
+{$R *.res}
+{$R 'Sources\Core\PythonEngine.dcr'}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Components for Python'}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  vcl,
+  dbrtl;
+
+contains
+  MethodCallBack in 'Sources\Core\MethodCallBack.pas',
+  PythonEngine in 'Sources\Core\PythonEngine.pas',
+  PythonGUIInputOutput in 'Sources\Core\PythonGUIInputOutput.pas',
+  WrapDelphi in 'Sources\Core\WrapDelphi.pas',
+  WrapDelphiActnList in 'Sources\Core\WrapDelphiActnList.pas',
+  WrapDelphiButtons in 'Sources\Core\WrapDelphiButtons.pas',
+  WrapDelphiClasses in 'Sources\Core\WrapDelphiClasses.pas',
+  WrapDelphiComCtrls in 'Sources\Core\WrapDelphiComCtrls.pas',
+  WrapDelphiControls in 'Sources\Core\WrapDelphiControls.pas',
+  WrapDelphiExtCtrls in 'Sources\Core\WrapDelphiExtCtrls.pas',
+  WrapDelphiForms in 'Sources\Core\WrapDelphiForms.pas',
+  WrapDelphiGraphics in 'Sources\Core\WrapDelphiGraphics.pas',
+  WrapDelphiGrids in 'Sources\Core\WrapDelphiGrids.pas',
+  WrapDelphiStdCtrls in 'Sources\Core\WrapDelphiStdCtrls.pas',
+  WrapDelphiTypes in 'Sources\Core\WrapDelphiTypes.pas',
+  WrapDelphiVCL in 'Sources\Core\WrapDelphiVCL.pas',
+  WrapDelphiWindows in 'Sources\Core\WrapDelphiWindows.pas',
+  pyDBFireDac in 'Sources\FireDAC\pyDBFireDac.pas';
+
+end.
