@@ -158,6 +158,8 @@ end;
 // object.value
 // object.method(args)
 function  PyPoint_getattr(obj : PPyObject; key : PAnsiChar) : PPyObject; cdecl;
+var
+ PyKey : PPyObject;
 begin
   with GetPythonEngine, PPyPoint(obj)^ do
     begin
@@ -170,11 +172,17 @@ begin
       else
         begin
           // Else check for a method
-          Result := Py_FindMethod( MethodsByName('PythonType1'), obj, key);
-          // or we could write, because it's quicker:
-          // Result := Py_FindMethod( Form1.PythonType1.MethodsData, obj, key);
-          if not Assigned(Result) then
-            PyErr_SetString (PyExc_AttributeError^, PAnsiChar(Format('Unknown attribute "%s"',[key])));
+          if IsPython3000 then begin
+            PyKey  := PyString_FromString(key);
+            Result := PyObject_GenericGetAttr(obj, PyKey);
+          end
+          else begin
+            Result := Py_FindMethod( MethodsByName('PythonType1'), obj, key);
+            // or we could write, because it's quicker:
+            // Result := Py_FindMethod( Form1.PythonType1.MethodsData, obj, key);
+            if not Assigned(Result) then
+              PyErr_SetString (PyExc_AttributeError^, PAnsiChar(Format('Unknown attribute "%s"',[key])));
+          end;
         end;
     end;
 end;

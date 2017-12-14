@@ -3,8 +3,6 @@
 // JCL_DEBUG_EXPERT_DELETEMAPFILE OFF
 program Project1;
 
-{$I Definition.Inc}
-
 uses
 {$IFDEF MSWINDOWS}
   Forms,

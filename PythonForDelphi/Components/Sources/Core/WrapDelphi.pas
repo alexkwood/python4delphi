@@ -1202,9 +1202,9 @@ constructor TContainerAccess.Create(AWrapper: TPyDelphiWrapper;
   AContainer: TObject);
 begin
   inherited Create;
-  Assert(Assigned(AWrapper));
+  //DAV>>> Assert(Assigned(AWrapper));
   Assert(Assigned(AContainer));
-  Assert(AContainer.InheritsFrom(ExpectedContainerClass), Format('Class %s expects a container of class %s', [ClassName, ExpectedContainerClass.ClassName]));
+  //DAV>>> Assert(AContainer.InheritsFrom(ExpectedContainerClass), Format('Class %s expects a container of class %s', [ClassName, ExpectedContainerClass.ClassName]));
   fWrapper := AWrapper;
   fContainer := AContainer;
 end;
@@ -1517,7 +1517,7 @@ function TPyDelphiObject.GetAttrO(key: PPyObject): PPyObject;
     Finally call inherited which calls PyObject_GenericGetAttr
 *)
 var
-  Name: ShortString;
+  Name: String;
 {$IFNDEF FPC}
   Info: PMethodInfoHeader;
 {$ENDIF}
@@ -1526,7 +1526,7 @@ var
 begin
   Result := nil;
   if GetPythonEngine.PyString_Check(Key) then
-    Name := ShortString(GetPythonEngine.PyString_AsDelphiString(Key))
+    Name := GetPythonEngine.PyString_AsDelphiString(Key)
   else
     Name := '';
 

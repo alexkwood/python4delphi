@@ -53,7 +53,7 @@ begin
     gEngine.UseLastKnownVersion := False;
     gEngine.RegVersion := '3.2';  //<-- Use the same version as the python 3.x your main program uses
     gEngine.APIVersion := 1013;
-    gEngine.DllName := 'python32.dll';
+    gEngine.DllName := 'python36.dll';
     gEngine.LoadDll;
     gModule := TPythonModule.Create(nil);
     gModule.Engine := gEngine;

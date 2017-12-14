@@ -78,6 +78,9 @@ uses
   SysUtils,
   SyncObjs,
   Variants,
+//DAV>>>
+  System.AnsiStrings, Data.SqlTimSt,
+//DAV<<<
 {$IFDEF DELPHI2005_OR_HIGHER}
 {$IFNDEF UNICODE}
   WideStrings,
@@ -138,7 +141,12 @@ const
     (DllName: 'python33.dll'; RegVersion: '3.3'; APIVersion: 1013; CanUseLatest: True),
     (DllName: 'python34.dll'; RegVersion: '3.4'; APIVersion: 1013; CanUseLatest: True),
     (DllName: 'python35.dll'; RegVersion: '3.5'; APIVersion: 1013; CanUseLatest: True),
+{$IFDEF DEBUG}
+    // (DllName: 'python36_d.dll'; RegVersion: '3.6'; APIVersion: 1013; CanUseLatest: True) );
     (DllName: 'python36.dll'; RegVersion: '3.6'; APIVersion: 1013; CanUseLatest: True),
+{$ELSE}
+    (DllName: 'python36.dll'; RegVersion: '3.6'; APIVersion: 1013; CanUseLatest: True),
+{$ENDIF}
     (DllName: 'python37.dll'; RegVersion: '3.7'; APIVersion: 1013; CanUseLatest: True) );
 {$ENDIF}
 {$IFDEF LINUX}
@@ -193,12 +201,14 @@ const
 {$IFDEF PYTHON36}
   COMPILED_FOR_PYTHON_VERSION_INDEX = 12;
 {$ENDIF}
-{$IFDEF PYTHON36}
+{$IFDEF PYTHON37}
   COMPILED_FOR_PYTHON_VERSION_INDEX = 13;
 {$ENDIF}
-  PYT_METHOD_BUFFER_INCREASE = 10;
-  PYT_MEMBER_BUFFER_INCREASE = 10;
-  PYT_GETSET_BUFFER_INCREASE = 10;
+//DAV>>>   !!! ReallocMethods, ReallocMembers, ReallocGetSets don't work correctly !!! 
+  PYT_METHOD_BUFFER_INCREASE = 100;
+  PYT_MEMBER_BUFFER_INCREASE = 100;
+  PYT_GETSET_BUFFER_INCREASE = 100;
+//DAV<<<
 
   METH_VARARGS  = $0001;
   METH_KEYWORDS = $0002;
@@ -1389,7 +1399,7 @@ type
 
   {$IF not Defined(FPC) and (CompilerVersion >= 23)}
   [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
-  {$IFEND}
+  {$ENDIF}
   TPythonInputOutput = class(TComponent)
   protected
     FMaxLines        : Integer;
@@ -1916,6 +1926,7 @@ type
     _PyObject_New:function (obt:PPyTypeObject;ob:PPyObject):PPyObject; cdecl;
     _PyString_Resize:function (var ob:PPyObject;i:NativeInt):integer; cdecl;
     Py_Finalize                     : procedure; cdecl;
+    Py_FinalizeEx                   : function : Integer;
     PyErr_ExceptionMatches          : function ( exc : PPyObject) : Integer; cdecl;
     PyErr_GivenExceptionMatches     : function ( raised_exc, exc : PPyObject) : Integer; cdecl;
     PyEval_EvalCode                 : function ( co : PPyCodeObject; globals, locals : PPyObject) : PPyObject; cdecl;
@@ -2130,7 +2141,7 @@ type
 
   {$IF not Defined(FPC) and (CompilerVersion >= 23)}
   [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
-  {$IFEND}
+  {$ENDIF}
   TPythonEngine = class(TPythonInterface)
   private
     FInitScript:                 TStrings;
@@ -2598,7 +2609,7 @@ type
 
   {$IF not Defined(FPC) and (CompilerVersion >= 23)}
   [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
-  {$IFEND}
+  {$ENDIF}
   TPythonModule = class(TMethodsContainer)
     protected
       FModuleName : AnsiString;
@@ -2633,6 +2644,9 @@ type
       procedure SetVar( const varName : AnsiString; value : PPyObject );
       function  GetVar( const varName : AnsiString ) : PPyObject;
       procedure DeleteVar( const varName : AnsiString );
+//DAV>>>
+      procedure ClearVars;
+//DAV<<<
       procedure SetVarFromVariant( const varName : AnsiString; const value : Variant );
       function  GetVarAsVariant( const varName: AnsiString ) : Variant;
 
@@ -2863,7 +2877,7 @@ type
   // that creates instances of itself.
   {$IF not Defined(FPC) and (CompilerVersion >= 23)}
   [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
-  {$IFEND}
+  {$ENDIF}
   TPythonType = class(TGetSetContainer)
     protected
       FType : PyTypeObject;
@@ -2951,7 +2965,7 @@ type
 
   {$IF not Defined(FPC) and (CompilerVersion >= 23)}
   [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
-  {$IFEND}
+  {$ENDIF}
   TPythonDelphiVar = class( TEngineClient )
     protected
       FModule    : AnsiString;
@@ -4002,6 +4016,8 @@ begin
   else
     _PyString_Resize          :=Import('_PyBytes_Resize');
   Py_Finalize                :=Import('Py_Finalize');
+  if IsPython3000 then
+    Py_FinalizeEx            :=Import('Py_FinalizeEx');
   if getProcAddress( FDLLHandle, 'PyCode_Addr2Line' ) <> nil then
     DLL_PyCode_Addr2Line     := Import('PyCode_Addr2Line');
   if getProcAddress( FDLLHandle, 'PyImport_ExecCodeModule' ) <> nil then
@@ -4614,13 +4630,16 @@ begin
             Finalize;
         end;
   // Then finalize Python, if we have to
-  if Initialized and FAutoFinalize then
+  if Initialized and FAutoFinalize then begin
     try
-      FFinalizing := True;
-      Py_Finalize;
-    finally
-      FFinalizing := False;
-    end;
+      try
+        FFinalizing := True;
+        Py_Finalize;
+      finally
+        FFinalizing := False;
+      end;
+    except end;
+  end;
   // Detach our clients, when engine is beeing destroyed or one of its clients.
   canDetachClients := csDestroying in ComponentState;
   if not canDetachClients then
@@ -4899,48 +4918,37 @@ end;
 procedure TPythonEngine.CheckRegistry;
 {$IFDEF MSWINDOWS}
 var
-  key : string;
-  Path : string;
-  NewPath : string;
-  MajorVersion : integer;
-  MinorVersion : integer;
-  VersionSuffix: string;
+  key : String;
+  path : String;
 {$ENDIF}
 begin
 {$IFDEF MSWINDOWS}
-  if Assigned( FOnPathInitialization ) then
   try
-    with TRegistry.Create(KEY_ALL_ACCESS and not KEY_NOTIFY) do
+    with TRegistry.Create(KEY_READ and not KEY_NOTIFY) do
       try
-        MajorVersion := StrToInt(RegVersion[1]);
-        MinorVersion := StrToInt(RegVersion[3]);
-        VersionSuffix := '';
-{$IFDEF CPUX86}
-        if (MajorVersion > 3) or ((MajorVersion = 3)  and (MinorVersion >= 5)) then
-          VersionSuffix := '-32';
-{$ENDIF}
-        key := Format('\Software\Python\PythonCore\%s%s\PythonPath', [RegVersion, VersionSuffix]);
-
+        //Access := KEY_READ; // works only with Delphi5 or greater
         RootKey := HKEY_LOCAL_MACHINE;
+        key := Format('\Software\Python\PythonCore\%s\PythonPath', [RegVersion]);
         if not KeyExists( key ) then
-        begin
-          // try a current user installation
-          RootKey := HKEY_CURRENT_USER;
-          if not KeyExists( key ) then  Exit;
-        end;
-        // Key found
-        OpenKey( key, True );
-        try
-          Path := ReadString('');
-          NewPath := Path;
-          FOnPathInitialization( Self, NewPath );
-          if NewPath <> Path then
           begin
-            WriteString( '', NewPath );
+            // try a current user installation
+            RootKey := HKEY_CURRENT_USER;
+            if not KeyExists( key ) then
+            begin
+              if Assigned( FOnPathInitialization ) then
+                begin
+                  path := '';
+                  FOnPathInitialization( Self, path );
+                  if path <> '' then
+                    begin
+                      //Access := KEY_ALL_ACCESS; // works only with Delphi5 or greater
+                      OpenKey( key, True );
+                      WriteString( '', path );
+                      CloseKey;
+                    end;
+                end;
+            end;
           end;
-        finally
-          CloseKey;
-        end;
       finally
         Free;
       end;
@@ -5731,6 +5739,9 @@ var
   Disp : IDispatch;
   DispID : Integer;
   args : PPyObject;
+//DAV>>>
+  l_dtSQLTimeStamp: TSQLTimeStamp;
+//DAV<<<
 begin
   Disp := nil;
   //Dereference Variant
@@ -5829,22 +5840,51 @@ begin
         Result := ReturnNone;
       end
     else
-      try
-        Disp := DeRefV;
-        wStr := '__asPPyObject__';
-        // detect if the variant supports this special property
-        if Assigned(Disp) and (Disp.GetIDsOfNames(GUID_NULL, @wStr, 1, 0, @DispID) = S_OK) then
-        begin
-          myInt := DeRefV.__asPPyObject__;  //Returns the address to PPyObject as integer. (See impl. in PythonAtom.pas)
-          Result := PPyObject(myInt);
-          Py_XIncRef(Result);
+//DAV>>>
+      if VarIsSQLTimeStamp(V) then begin
+        l_dtSQLTimeStamp := VarToSQLTimeStamp(V);
+        dt := SQLTimeStampToDateTime(l_dtSQLTimeStamp);
+        DecodeDate( dt, y, m, d );
+        DecodeTime( dt, h, mi, sec, ms );
+        if (DatetimeConversionMode = dcmToTuple) then begin
+          wd := (DayOfWeek( dt ) + 7 - 2) mod 7; // In Python, Monday is the first day (=0)
+          jd := Round(EncodeDate(y,m,d)-EncodeDate(y,1,1))+1; // This shoud be the Julian day, the day in a year (0-366)
+          dl := -1; // This is daylight save...
+          Result := ArrayToPyTuple( [y, m, d, h, mi, sec, wd, jd, dl] );
         end
-        else //If variant don't implement __asPPyObject__, then we have to return nothing.
+        else if (DatetimeConversionMode = dcmToDatetime) then begin
+          if not Assigned(FPyDateTime_DateTimeType) then
+            raise EPythonError.Create('dcmToDatetime DatetimeConversionMode cannot be used with this version of python. Missing module datetime');
+          args := ArrayToPyTuple([y, m, d, h, mi, sec, ms*1000]);
+          try
+            Result := PyEval_CallObjectWithKeywords(FPyDateTime_DateTimeType, args, nil);
+            CheckError(False);
+          finally
+            Py_DecRef(args);
+          end;
+        end
+        else
+          raise EPythonError.Create('Invalid DatetimeConversionMode');
+      end
+      else begin
+//DAV<<<
+        try
+          Disp := DeRefV;
+          wStr := '__asPPyObject__';
+          // detect if the variant supports this special property
+          if Assigned(Disp) and (Disp.GetIDsOfNames(GUID_NULL, @wStr, 1, 0, @DispID) = S_OK) then
+          begin
+            myInt := DeRefV.__asPPyObject__;  //Returns the address to PPyObject as integer. (See impl. in PythonAtom.pas)
+            Result := PPyObject(myInt);
+            Py_XIncRef(Result);
+          end
+          else //If variant don't implement __asPPyObject__, then we have to return nothing.
+            Result := ReturnNone;
+        except
+          // if something went wrong, just return none!
           Result := ReturnNone;
-      except
-        // if something went wrong, just return none!
-        Result := ReturnNone;
-      end; // of try
+        end; // of try
+      end;
   end; // of case
 end;
 
@@ -6029,7 +6069,7 @@ begin
     vtString:
     begin
       if Assigned(v.VString) then
-        Result := PyString_FromString( StrPCopy( buff, v.VString^) )
+        Result := PyString_FromString( System.AnsiStrings.StrPCopy( buff, v.VString^) )
       else
         Result := PyString_FromString( '' );
     end;
@@ -6155,7 +6195,7 @@ function TPythonEngine.ArrayToPyDict( items : array of const) : PPyObject;
       vtAnsiString:
         begin
           if Assigned(v.VAnsiString) then
-            Result := StrPas(PAnsiChar(Ansistring(v.VAnsiString)))
+            Result := System.AnsiStrings.StrPas(PAnsiChar(Ansistring(v.VAnsiString)))
           else
             Result := '';
         end;
@@ -6807,8 +6847,9 @@ function TMethodsContainer.AddMethod( AMethodName  : PAnsiChar;
                                       AMethod  : PyCFunction;
                                       ADocString : PAnsiChar ) : PPyMethodDef;
 begin
-  if FMethodCount = FAllocatedMethodCount then
+  if FMethodCount = FAllocatedMethodCount then begin
     ReallocMethods;
+  end;
   Result := Methods[ MethodCount ];
   Result^.ml_name  := AMethodName;
   Result^.ml_meth  := AMethod;
@@ -7581,6 +7622,19 @@ begin
   else
     raise EPythonError.CreateFmt( 'Can''t delete var "%s" in module "%s", because it is not yet initialized', [varName, ModuleName] );
 end;
+
+//DAV>>>
+procedure TPythonModule.ClearVars;
+var
+ dict : PPyObject;
+begin
+ if Assigned(FEngine) and Assigned( FModule ) then
+   with Engine do begin
+     dict := PyModule_GetDict( Module );
+     PyDict_Clear(dict);
+   end;
+end;
+//DAV<<<
 
 procedure TPythonModule.SetVarFromVariant( const varName : AnsiString; const value : Variant );
 var

@@ -1,7 +1,5 @@
 unit Unit1;
 
-{$I Definition.Inc}
-
 interface
 
 uses

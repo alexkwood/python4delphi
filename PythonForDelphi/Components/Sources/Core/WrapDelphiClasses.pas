@@ -342,7 +342,7 @@ begin
   begin
     // We adjust the transmitted self argument
     Adjust(@Self);
-    if PyArg_ParseTuple( args, 'O:Assign',@_obj ) <> 0 then
+    if PyArg_ParseTuple( args, PAnsiChar('O:Assign'), @_obj ) <> 0 then
       Result := Self.Assign(_obj)
     else
       Result := nil;
@@ -365,7 +365,7 @@ begin
   with GetPythonEngine do begin
     // We adjust the transmitted self argument
     Adjust(@Self);
-    if PyArg_ParseTuple( args, ':GetNamePath' ) <> 0 then begin
+    if PyArg_ParseTuple( args, PAnsiChar(':GetNamePath') ) <> 0 then begin
       Result := PyString_FromString(PAnsiChar(AnsiString(DelphiObject.GetNamePath)))
     end else
       Result := nil;
@@ -376,12 +376,12 @@ class procedure TPyDelphiPersistent.RegisterMethods(
   PythonType: TPythonType);
 begin
   inherited;
-  PythonType.AddMethod('Assign', @TPyDelphiPersistent.Assign_Wrapper,
-    'TPersistent.Assign(persistent)'#10 +
-    'Assigns to this object the values of another TPersistent object');
-  PythonType.AddMethod('GetNamePath', @TPyDelphiPersistent.GetNamePath_Wrapper,
-    'TPersistent.GetNamePath()'#10 +
-    'Returns the name of the object as it appears in the Object Inspector.');
+  PythonType.AddMethod(PAnsiChar('Assign'), @TPyDelphiPersistent.Assign_Wrapper,
+    PAnsiChar('TPersistent.Assign(persistent)'#10 +
+    'Assigns to this object the values of another TPersistent object'));
+  PythonType.AddMethod(PAnsiChar('GetNamePath'), @TPyDelphiPersistent.GetNamePath_Wrapper,
+    PAnsiChar('TPersistent.GetNamePath()'#10 +
+    'Returns the name of the object as it appears in the Object Inspector.'));
 end;
 
 procedure TPyDelphiPersistent.SetDelphiObject(const Value: TPersistent);
@@ -459,7 +459,7 @@ function TPyDelphiCollection.Add_Wrapper(args: PPyObject): PPyObject;
 begin
   // We adjust the transmitted self argument
   Adjust(@Self);
-  if GetPythonEngine.PyArg_ParseTuple( args, ':Add' ) <> 0 then
+  if GetPythonEngine.PyArg_ParseTuple( args, PAnsiChar(':Add') ) <> 0 then
     Result := Wrap(DelphiObject.Add)
   else
     Result := nil;
@@ -470,7 +470,7 @@ function TPyDelphiCollection.BeginUpdate_Wrapper(
 begin
   // We adjust the transmitted self argument
   Adjust(@Self);
-  if GetPythonEngine.PyArg_ParseTuple( args, ':BeginUpdate' ) <> 0 then begin
+  if GetPythonEngine.PyArg_ParseTuple( args, PAnsiChar(':BeginUpdate') ) <> 0 then begin
     DelphiObject.BeginUpdate;
     Result := GetPythonEngine.ReturnNone;
   end else
@@ -481,7 +481,7 @@ function TPyDelphiCollection.Clear_Wrapper(args: PPyObject): PPyObject;
 begin
   // We adjust the transmitted self argument
   Adjust(@Self);
-  if GetPythonEngine.PyArg_ParseTuple( args, ':Clear') <> 0 then begin
+  if GetPythonEngine.PyArg_ParseTuple( args, PAnsiChar(':Clear')) <> 0 then begin
     (DelphiObject as TCollection).Clear;
     Result := GetPythonEngine.ReturnNone;
   end else
@@ -494,7 +494,7 @@ Var
 begin
   // We adjust the transmitted self argument
   Adjust(@Self);
-  if GetPythonEngine.PyArg_ParseTuple( args, 'i:Delete',@Index ) <> 0 then
+  if GetPythonEngine.PyArg_ParseTuple( args, PAnsiChar('i:Delete'),@Index ) <> 0 then
   begin
     if not CheckIndex(Index, DelphiObject.Count) then
       Result := nil
@@ -517,7 +517,7 @@ function TPyDelphiCollection.EndUpdate_Wrapper(args: PPyObject): PPyObject;
 begin
   // We adjust the transmitted self argument
   Adjust(@Self);
-  if GetPythonEngine.PyArg_ParseTuple( args, ':EndUpdate') <> 0 then begin
+  if GetPythonEngine.PyArg_ParseTuple( args, PAnsiChar(':EndUpdate')) <> 0 then begin
     DelphiObject.EndUpdate;
     Result := GetPythonEngine.ReturnNone;
   end else
@@ -566,7 +566,7 @@ Var
 begin
   // We adjust the transmitted self argument
   Adjust(@Self);
-  if GetPythonEngine.PyArg_ParseTuple( args, 'i:Insert',@Index ) <> 0 then
+  if GetPythonEngine.PyArg_ParseTuple( args, PAnsiChar('i:Insert'),@Index ) <> 0 then
     Result := Wrap(DelphiObject.Insert(Index))
   else
     Result := nil;
@@ -577,12 +577,12 @@ begin
   inherited;
   with PythonType do
     begin
-      AddGetSet('Count', @TPyDelphiCollection.Get_Count, nil,
-        'Returns the count of collection items', nil);
-      AddGetSet('Items', @TPyDelphiCollection.Get_Items, nil,
-        'Returns an iterator over the collection items', nil);
-      AddGetSet('Owner', @TPyDelphiCollection.Get_Owner, nil,
-        'Returns the Owner of the collection', nil);
+      AddGetSet(PAnsiChar('Count'), @TPyDelphiCollection.Get_Count, nil,
+        PAnsiChar('Returns the count of collection items'), nil);
+      AddGetSet(PAnsiChar('Items'), @TPyDelphiCollection.Get_Items, nil,
+        PAnsiChar('Returns an iterator over the collection items'), nil);
+      AddGetSet(PAnsiChar('Owner'), @TPyDelphiCollection.Get_Owner, nil,
+        PAnsiChar('Returns the Owner of the collection'), nil);
     end;
 end;
 
@@ -590,24 +590,24 @@ class procedure TPyDelphiCollection.RegisterMethods(
   PythonType: TPythonType);
 begin
   inherited;
-  PythonType.AddMethod('Insert', @TPyDelphiCollection.Insert_Wrapper,
-    'TCollection.Insert(Index)'#10 +
-    'Inserts a new collection item to the collection at the Index position');
-  PythonType.AddMethod('Add', @TPyDelphiCollection.Add_Wrapper,
-    'TCollection.Add()'#10 +
-    'Adds a collection item to the collection');
-  PythonType.AddMethod('Clear', @TPyDelphiCollection.Clear_Wrapper,
-    'TCollection.Clear()'#10 +
-    'Clears all collection items');
-  PythonType.AddMethod('Delete', @TPyDelphiCollection.Delete_Wrapper,
-    'TCollection.Delete(Index)'#10 +
-    'Deletes a single item from the collection.');
-  PythonType.AddMethod('BeginUpdate', @TPyDelphiCollection.BeginUpdate_Wrapper,
-    'TCollection.BeginUpdate()'#10 +
-    'Suspends screen repainting.');
-  PythonType.AddMethod('EndUpdate', @TPyDelphiCollection.EndUpdate_Wrapper,
-    'TCollection.EndUpdate()'#10 +
-    'Re-enables screen repainting.');
+  PythonType.AddMethod(PAnsiChar('Insert'), @TPyDelphiCollection.Insert_Wrapper,
+    PAnsiChar('TCollection.Insert(Index)'#10 +
+              'Inserts a new collection item to the collection at the Index position'));
+  PythonType.AddMethod(PAnsiChar('Add'), @TPyDelphiCollection.Add_Wrapper,
+    PAnsiChar('TCollection.Add()'#10 +
+              'Adds a collection item to the collection'));
+  PythonType.AddMethod(PAnsiChar('Clear'), @TPyDelphiCollection.Clear_Wrapper,
+    PAnsiChar('TCollection.Clear()'#10 +
+              'Clears all collection items'));
+  PythonType.AddMethod(PAnsiChar('Delete'), @TPyDelphiCollection.Delete_Wrapper,
+    PAnsiChar('TCollection.Delete(Index)'#10 +
+              'Deletes a single item from the collection.'));
+  PythonType.AddMethod(PAnsiChar('BeginUpdate'), @TPyDelphiCollection.BeginUpdate_Wrapper,
+    PAnsiChar('TCollection.BeginUpdate()'#10 +
+              'Suspends screen repainting.'));
+  PythonType.AddMethod(PAnsiChar('EndUpdate'), @TPyDelphiCollection.EndUpdate_Wrapper,
+    PAnsiChar('TCollection.EndUpdate()'#10 +
+              'Re-enables screen repainting.'));
 end;
 
 procedure TPyDelphiCollection.SetDelphiObject(const Value: TCollection);
@@ -736,7 +736,7 @@ begin
     Adjust(@Self);
     Result := nil;
     s := nil;
-    if PyArg_ParseTuple( args, '|O:BindMethodsToEvents',@s ) <> 0 then
+    if PyArg_ParseTuple( args, PAnsiChar('|O:BindMethodsToEvents'),@s ) <> 0 then
     begin
       if Assigned(S) then
         _prefix := PyString_AsDelphiString(s);
@@ -869,7 +869,7 @@ begin
   with GetPythonEngine do begin
     // We adjust the transmitted self argument
     Adjust(@Self);
-    if PyArg_ParseTuple( args, ':GetParentComponent') <> 0 then begin
+    if PyArg_ParseTuple( args, PAnsiChar(':GetParentComponent')) <> 0 then begin
       Result := Wrap(DelphiObject.GetParentComponent)
     end else
       Result := nil;
@@ -881,7 +881,7 @@ begin
   with GetPythonEngine do begin
     // We adjust the transmitted self argument
     Adjust(@Self);
-    if PyArg_ParseTuple( args, ':HasParent') <> 0 then begin
+    if PyArg_ParseTuple( args, PAnsiChar(':HasParent')) <> 0 then begin
       Result := VariantAsPyObject(DelphiObject.HasParent)
     end else
       Result := nil;
@@ -926,12 +926,12 @@ begin
   inherited;
   with PythonType do
     begin
-      AddGetSet('ComponentCount', @TPyDelphiComponent.Get_ComponentCount, nil,
-        'Returns the owned component count', nil);
-      AddGetSet('Owner', @TPyDelphiComponent.Get_Owner, nil,
-        'Returns the Component Owner', nil);
-      AddGetSet('Components', @TPyDelphiComponent.Get_Components, nil,
-        'Returns an iterator over the owned components', nil);
+      AddGetSet(PAnsiChar('ComponentCount'), @TPyDelphiComponent.Get_ComponentCount, nil,
+        PAnsiChar('Returns the owned component count'), nil);
+      AddGetSet(PAnsiChar('Owner'), @TPyDelphiComponent.Get_Owner, nil,
+        PAnsiChar('Returns the Component Owner'), nil);
+      AddGetSet(PAnsiChar('Components'), @TPyDelphiComponent.Get_Components, nil,
+        PAnsiChar('Returns an iterator over the owned components'), nil);
     end;
 end;
 
@@ -939,18 +939,18 @@ class procedure TPyDelphiComponent.RegisterMethods(
   PythonType: TPythonType);
 begin
   inherited;
-  PythonType.AddMethod('GetParentComponent', @TPyDelphiComponent.GetParentComponent_Wrapper,
-    'TComponent.GetParentComponent()'#10 +
-    'Returns the parent of a component.');
-  PythonType.AddMethod('HasParent', @TPyDelphiComponent.HasParent_Wrapper,
-    'TComponent.HasParent()'#10 +
-    'Indicates whether the component has a parent to handle its filing.');
-  PythonType.AddMethod('BindMethodsToEvents', @TPyDelphiComponent.BindMethodsToEvents,
-    'TComponent.BindMethodsToEvents(prefix)'#10 +
+  PythonType.AddMethod(PAnsiChar('GetParentComponent'), @TPyDelphiComponent.GetParentComponent_Wrapper,
+    PAnsiChar('TComponent.GetParentComponent()'#10 +
+              'Returns the parent of a component.'));
+  PythonType.AddMethod(PAnsiChar('HasParent'), @TPyDelphiComponent.HasParent_Wrapper,
+    PAnsiChar('TComponent.HasParent()'#10 +
+              'Indicates whether the component has a parent to handle its filing.'));
+  PythonType.AddMethod(PAnsiChar('BindMethodsToEvents'), @TPyDelphiComponent.BindMethodsToEvents,
+    PAnsiChar('TComponent.BindMethodsToEvents(prefix)'#10 +
     'Connects methods to component events if they are named using the following patter: Prefix_ComponentName_EventName.'+#10+
     'Example: def handle_button1_OnClick(Sender): pass'+#10+
     'The function returns a list of tuples. Each tuple contains the name of the component, the name of the event and the method object assigned to the event.'+#10+
-    'Note that the prefix parameter is optional and will default to "handle_".');
+    'Note that the prefix parameter is optional and will default to "handle_".'));
 end;
 
 class procedure TPyDelphiComponent.SetupType(PythonType: TPythonType);
@@ -993,7 +993,7 @@ begin
     else
     begin
       Result := nil;
-      PyErr_SetString (PyExc_KeyError^, 'Key must be a string');
+      PyErr_SetString (PyExc_KeyError^, PAnsiChar('Key must be a string'));
     end;
   end;
 end;
@@ -1028,7 +1028,7 @@ var
   _owner : TObject;
 begin
   inherited;
-  if APythonType.Engine.PyArg_ParseTuple( args, 'O:Create',@_obj ) <> 0 then
+  if APythonType.Engine.PyArg_ParseTuple( args, PAnsiChar('O:Create'),@_obj ) <> 0 then
   begin
     _owner := nil;
     if CheckObjAttribute(_obj, 'Owner', TComponent, _owner) then
@@ -1096,7 +1096,7 @@ begin
     else
     begin
       Result := False;
-      PyErr_SetString (PyExc_AttributeError^, 'You can only assign strings to TStrings items');
+      PyErr_SetString (PyExc_AttributeError^, PAnsiChar('You can only assign strings to TStrings items'));
     end;
   end
 end;
@@ -1160,7 +1160,7 @@ begin
     else
     begin
       Result := False;
-      PyErr_SetString (PyExc_AttributeError^, 'You can only assign Delphi wrappers to Objects items');
+      PyErr_SetString (PyExc_AttributeError^, PAnsiChar('You can only assign Delphi wrappers to Objects items'));
     end;
   end
 end;
@@ -1176,7 +1176,7 @@ begin
   // We adjust the transmitted self argument
   Adjust(@Self);
   with GetPythonEngine do
-    if PyArg_ParseTuple( args, 'OO:AddObject',@PStr, @_obj ) <> 0 then
+    if PyArg_ParseTuple( args, PAnsiChar('OO:AddObject'),@PStr, @_obj ) <> 0 then
     begin
       if CheckObjAttribute(_obj, 'The second argument of AddObject', TObject, _value) then
           Result := PyInt_FromLong(DelphiObject.AddObject(PyString_AsDelphiString(PStr), _value))
@@ -1236,7 +1236,7 @@ function TPyDelphiStrings.BeginUpdate_Wrapper(args: PPyObject): PPyObject;
 begin
   // We adjust the transmitted self argument
   Adjust(@Self);
-  if GetPythonEngine.PyArg_ParseTuple( args, ':BeginUpdate') <> 0 then begin
+  if GetPythonEngine.PyArg_ParseTuple( args, PAnsiChar(':BeginUpdate')) <> 0 then begin
     DelphiObject.BeginUpdate;
     Result := GetPythonEngine.ReturnNone;
   end else
@@ -1247,7 +1247,7 @@ function TPyDelphiStrings.Clear_Wrapper(args: PPyObject): PPyObject;
 begin
   // We adjust the transmitted self argument
   Adjust(@Self);
-  if GetPythonEngine.PyArg_ParseTuple( args, ':Clear') <> 0 then begin
+  if GetPythonEngine.PyArg_ParseTuple( args, PAnsiChar(':Clear')) <> 0 then begin
     DelphiObject.Clear;
     Result := GetPythonEngine.ReturnNone;
   end else
@@ -1260,7 +1260,7 @@ Var
 begin
   // We adjust the transmitted self argument
   Adjust(@Self);
-  if GetPythonEngine.PyArg_ParseTuple( args, 'i:Delete',@Index ) <> 0 then
+  if GetPythonEngine.PyArg_ParseTuple( args, PAnsiChar('i:Delete'),@Index ) <> 0 then
   begin
     if CheckIndex(Index, DelphiObject.Count) then
     begin
@@ -1283,7 +1283,7 @@ function TPyDelphiStrings.EndUpdate_Wrapper(args: PPyObject): PPyObject;
 begin
   // We adjust the transmitted self argument
   Adjust(@Self);
-  if GetPythonEngine.PyArg_ParseTuple( args, ':EndUpdate') <> 0 then begin
+  if GetPythonEngine.PyArg_ParseTuple( args, PAnsiChar(':EndUpdate')) <> 0 then begin
     DelphiObject.EndUpdate;
     Result := GetPythonEngine.ReturnNone;
   end else
@@ -1333,7 +1333,7 @@ begin
   // We adjust the transmitted self argument
   Adjust(@Self);
   with GetPythonEngine do
-    if PyArg_ParseTuple( args, 'O:IndexOf',@PStr ) <> 0 then
+    if PyArg_ParseTuple( args, PAnsiChar('O:IndexOf'),@PStr ) <> 0 then
       Result := GetPythonEngine.PyInt_FromLong(DelphiObject.IndexOf(PyString_AsDelphiString(PStr)))
     else
       Result := nil;
@@ -1345,7 +1345,7 @@ Var
 begin
   // We adjust the transmitted self argument
   Adjust(@Self);
-  if GetPythonEngine.PyArg_ParseTuple( args, 's:LoadFromFile',@PStr ) <> 0 then
+  if GetPythonEngine.PyArg_ParseTuple( args, PAnsiChar('s:LoadFromFile'),@PStr ) <> 0 then
   begin
     DelphiObject.LoadFromFile(String(PStr));
     Result := GetPythonEngine.ReturnNone;
@@ -1383,7 +1383,7 @@ begin
           Result := nil;
         end;
       end else with GetPythonEngine do begin
-        PyErr_SetString (PyExc_KeyError^, '<Empty String>');
+        PyErr_SetString (PyExc_KeyError^, ('<Empty String>'));
         Result := nil;
       end;
     end;
@@ -1395,45 +1395,45 @@ begin
   inherited;
   with PythonType do
     begin
-      AddGetSet('Capacity', @TPyDelphiStrings.Get_Capacity, @TPyDelphiStrings.Set_Capacity,
-        'Indicates the number of strings the TStrings object can hold.', nil);
-      AddGetSet('Text', @TPyDelphiStrings.Get_Text, @TPyDelphiStrings.Set_Text,
-        'Lists the strings in the TStrings object as a single string with the individual strings delimited by carriage returns and line feeds.', nil);
-      AddGetSet('Objects', @TPyDelphiStrings.Get_Objects, nil,
-        'Represents a set of objects that are associated one with each of the strings in the Strings property.', nil);
+      AddGetSet(PAnsiChar('Capacity'), @TPyDelphiStrings.Get_Capacity, @TPyDelphiStrings.Set_Capacity,
+        PAnsiChar('Indicates the number of strings the TStrings object can hold.'), nil);
+      AddGetSet(PAnsiChar('Text'), @TPyDelphiStrings.Get_Text, @TPyDelphiStrings.Set_Text,
+        PAnsiChar('Lists the strings in the TStrings object as a single string with the individual strings delimited by carriage returns and line feeds.'), nil);
+      AddGetSet(PAnsiChar('Objects'), @TPyDelphiStrings.Get_Objects, nil,
+        PAnsiChar('Represents a set of objects that are associated one with each of the strings in the Strings property.'), nil);
     end;
 end;
 
 class procedure TPyDelphiStrings.RegisterMethods(PythonType: TPythonType);
 begin
   inherited;
-  PythonType.AddMethod('Add', @TPyDelphiStrings.Add_Wrapper,
-    'TStrings.Add(s)'#10 +
-    'Adds a string to the TStrings object and returns the index position');
-  PythonType.AddMethod('AddObject', @TPyDelphiStrings.AddObject_Wrapper,
-    'TStrings.AddObject(s, delphiobject)'#10 +
-    'Adds a string and an associated Delphi object to the Strings and returns the index position');
-  PythonType.AddMethod('Clear', @TPyDelphiStrings.Clear_Wrapper,
-    'TStrings.Clear()'#10 +
-    'Clears all strings from a TStrings (and the associated objects');
-  PythonType.AddMethod('Delete', @TPyDelphiStrings.Delete_Wrapper,
-    'TStrings.Delete(i)'#10 +
-    'Deletes the string at Index i (and the associated object');
-  PythonType.AddMethod('IndexOf', @TPyDelphiStrings.IndexOf_Wrapper,
-    'TStrings.IndexOf(s)'#10 +
-    'Returns the Index of a string s or -1 if not found');
-  PythonType.AddMethod('BeginUpdate', @TPyDelphiStrings.BeginUpdate_Wrapper,
-    'TStrings.BeginUpdate()'#10 +
-    'Enables the TStrings object to track when the list of strings is changing.');
+  PythonType.AddMethod(PAnsiChar('Add'), @TPyDelphiStrings.Add_Wrapper,
+    PAnsiChar('TStrings.Add(s)'#10 +
+    'Adds a string to the TStrings object and returns the index position'));
+  PythonType.AddMethod(PAnsiChar('AddObject'), @TPyDelphiStrings.AddObject_Wrapper,
+    PAnsiChar('TStrings.AddObject(s, delphiobject)'#10 +
+    'Adds a string and an associated Delphi object to the Strings and returns the index position'));
+  PythonType.AddMethod(PAnsiChar('Clear'), @TPyDelphiStrings.Clear_Wrapper,
+    PAnsiChar('TStrings.Clear()'#10 +
+    'Clears all strings from a TStrings (and the associated objects'));
+  PythonType.AddMethod(PAnsiChar('Delete'), @TPyDelphiStrings.Delete_Wrapper,
+    PAnsiChar('TStrings.Delete(i)'#10 +
+    'Deletes the string at Index i (and the associated object'));
+  PythonType.AddMethod(PAnsiChar('IndexOf'), @TPyDelphiStrings.IndexOf_Wrapper,
+    PAnsiChar('TStrings.IndexOf(s)'#10 +
+    'Returns the Index of a string s or -1 if not found'));
+  PythonType.AddMethod(PAnsiChar('BeginUpdate'), @TPyDelphiStrings.BeginUpdate_Wrapper,
+    PAnsiChar('TStrings.BeginUpdate()'#10 +
+    'Enables the TStrings object to track when the list of strings is changing.'));
   PythonType.AddMethod('EndUpdate', @TPyDelphiStrings.EndUpdate_Wrapper,
-    'TStrings.EndUpdate()'#10 +
-    'Enables the TStrings object to keep track of when the list of strings has finished changing.');
-  PythonType.AddMethod('LoadFromFile', @TPyDelphiStrings.LoadFromFile_Wrapper,
-    'TStrings.LoadFromFile(filename)'#10 +
-    'Fills the list with the lines of text in a specified file.');
-  PythonType.AddMethod('SaveToFile', @TPyDelphiStrings.SaveToFile_Wrapper,
-    'TStrings.SaveToFile(filename)'#10 +
-    'Saves the strings in the list to the specified file.');
+    PAnsiChar('TStrings.EndUpdate()'#10 +
+    'Enables the TStrings object to keep track of when the list of strings has finished changing.'));
+  PythonType.AddMethod(PAnsiChar('LoadFromFile'), @TPyDelphiStrings.LoadFromFile_Wrapper,
+    PAnsiChar('TStrings.LoadFromFile(filename)'#10 +
+    'Fills the list with the lines of text in a specified file.'));
+  PythonType.AddMethod(PAnsiChar('SaveToFile'), @TPyDelphiStrings.SaveToFile_Wrapper,
+    PAnsiChar('TStrings.SaveToFile(filename)'#10 +
+    'Saves the strings in the list to the specified file.'));
 end;
 
 function TPyDelphiStrings.Repr: PPyObject;
@@ -1449,7 +1449,7 @@ Var
 begin
   // We adjust the transmitted self argument
   Adjust(@Self);
-  if GetPythonEngine.PyArg_ParseTuple( args, 's:SaveToFile',@PStr ) <> 0 then
+  if GetPythonEngine.PyArg_ParseTuple( args, PAnsiChar('s:SaveToFile'),@PStr ) <> 0 then
   begin
     DelphiObject.SaveToFile(String(PStr));
     Result := GetPythonEngine.ReturnNone;
@@ -1481,7 +1481,7 @@ begin
   with GetPythonEngine do begin
     // We adjust the transmitted self argument
     Adjust(@Self);
-    if PyArg_ParseTuple( args, ':Execute') <> 0 then begin
+    if PyArg_ParseTuple( args, PAnsiChar(':Execute')) <> 0 then begin
       Result := VariantAsPyObject( DelphiObject.Execute );
     end else
       Result := nil;
@@ -1507,8 +1507,8 @@ begin
   inherited;
   with PythonType do
     begin
-      AddGetSet('ActionComponent', @TPyDelphiBasicAction.Get_ActionComponent, @TPyDelphiBasicAction.Set_ActionComponent,
-        'Indicates the client component that caused this action to execute.', nil);
+      AddGetSet(PAnsiChar('ActionComponent'), @TPyDelphiBasicAction.Get_ActionComponent, @TPyDelphiBasicAction.Set_ActionComponent,
+        PAnsiChar('Indicates the client component that caused this action to execute.'), nil);
     end;
 end;
 
@@ -1516,12 +1516,12 @@ class procedure TPyDelphiBasicAction.RegisterMethods(
   PythonType: TPythonType);
 begin
   inherited;
-  PythonType.AddMethod('Execute', @TPyDelphiBasicAction.Execute_Wrapper,
-    'TBasicAction.Execute()'#10 +
-    'Generates an OnExecute event.');
-  PythonType.AddMethod('Update', @TPyDelphiBasicAction.Update_Wrapper,
-    'TBasicAction.Update()'#10 +
-    'Provides an opportunity to execute centralized code when an application is idle.');
+  PythonType.AddMethod(PAnsiChar('Execute'), @TPyDelphiBasicAction.Execute_Wrapper,
+    PAnsiChar('TBasicAction.Execute()'#10 +
+    'Generates an OnExecute event.'));
+  PythonType.AddMethod(PAnsiChar('Update'), @TPyDelphiBasicAction.Update_Wrapper,
+    PAnsiChar('TBasicAction.Update()'#10 +
+    'Provides an opportunity to execute centralized code when an application is idle.'));
 end;
 
 procedure TPyDelphiBasicAction.SetDelphiObject(const Value: TBasicAction);
@@ -1551,7 +1551,7 @@ begin
   with GetPythonEngine do begin
     // We adjust the transmitted self argument
     Adjust(@Self);
-    if PyArg_ParseTuple( args, ':Update') <> 0 then begin
+    if PyArg_ParseTuple( args, PAnsiChar(':Update')) <> 0 then begin
       Result := VariantAsPyObject( DelphiObject.Update );
     end else
       Result := nil;
@@ -1593,5 +1593,6 @@ begin
 end;
 
 initialization
-  RegisteredUnits.Add(TClassesRegistration.Create);
+ RegisteredUnits.Add(TClassesRegistration.Create);
+
 end.

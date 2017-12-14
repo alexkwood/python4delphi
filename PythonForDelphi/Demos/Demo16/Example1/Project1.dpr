@@ -1,7 +1,5 @@
 program Project1;
 
-{$I Definition.Inc}
-
 uses
 {$IFDEF MSWINDOWS}
   Forms,

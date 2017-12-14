@@ -37,7 +37,7 @@
 //{$DEFINE PYTHON33}
 //{$DEFINE PYTHON34}
 //{$DEFINE PYTHON35}
-//{$DEFINE PYTHON36}
+{$DEFINE PYTHON36}
 //{$DEFINE PYTHON37}
 
 /////////////////////////////////////////////////////////////////////////////

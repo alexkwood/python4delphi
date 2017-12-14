@@ -29,7 +29,7 @@ object Form1: TForm1
     Left = 0
     Top = 132
     Width = 528
-    Height = 164
+    Height = 163
     Align = alClient
     Lines.Strings = (
       'import sys'
@@ -41,7 +41,7 @@ object Form1: TForm1
   end
   object Panel1: TPanel
     Left = 0
-    Top = 296
+    Top = 295
     Width = 528
     Height = 41
     Align = alBottom
@@ -69,19 +69,19 @@ object Form1: TForm1
     TabOrder = 2
   end
   object PythonEngine1: TPythonEngine
-    DllName = 'python32.dll'
+    DllName = 'python36.dll'
     APIVersion = 1013
     RegVersion = '3.2'
     UseLastKnownVersion = False
     IO = PythonGUIInputOutput1
-    Left = 16
+    Left = 56
     Top = 16
   end
   object PythonGUIInputOutput1: TPythonGUIInputOutput
     UnicodeIO = True
     RawOutput = False
     Output = Memo2
-    Left = 56
+    Left = 184
     Top = 16
   end
 end

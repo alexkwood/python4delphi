@@ -6,3 +6,7 @@ Python for Delphi (P4D) is a set of free components that wrap up the Python dll 
   * **Wrapping of Delphi objects for use in python scripts using RTTI (WrapDelphi.pas)**
 
 P4D makes it very easy to use python as a scripting language for Delphi applications.  It comes with an extensive range of demos and tutorials.
+
+This forked-version includes customizations to Python 3.x, 64bit and FireDAC.
+The GetIt-package "SynEdit" is required. 
+All changed demos have been compiled and tested to 64-bit-Windows.
